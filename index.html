@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emoji Nutrimatic · Full CLDR · Emojipedia Data</title>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --surface-hover: #fef9ec;
+      --text: #2b2418;
+      --text-secondary: #6b5f4a;
+      --accent: #daa520;
+      --accent-glow: #fce8b0;
+      --border: #e3d9c6;
+      --shadow-sm: 0 1px 4px rgba(0,0,0,0.05);
+      --shadow-md: 0 6px 18px rgba(0,0,0,0.10);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --font: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Cascadia Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1b1914;
+        --surface: #28241c;
+        --surface-hover: #353028;
+        --text: #e7dfce;
+        --text-secondary: #a69a82;
+        --accent: #e6b83a;
+        --accent-glow: #4d3e1c;
+        --border: #403a2e;
+        --shadow-sm: 0 1px 4px rgba(0,0,0,0.25);
+        --shadow-md: 0 6px 20px rgba(0,0,0,0.45);
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    .header {
+      text-align: center;
+      padding: 36px 20px 12px;
+      max-width: 750px;
+    }
+    .header h1 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .header .icon { font-size: 2.3rem; line-height:1; }
+    .header .subtitle {
+      margin-top: 6px;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+    }
+    .header .badge {
+      display: inline-block;
+      background: var(--accent-glow);
+      color: #7b5a14;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-top: 10px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .search-container {
+      width: 100%;
+      max-width: 720px;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      padding-top: 8px;
+      padding-bottom: 14px;
+    }
+    .search-wrapper {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-wrapper:focus-within {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-md), 0 0 0 6px var(--accent-glow);
+    }
+    .search-icon {
+      flex-shrink: 0;
+      padding-left: 16px;
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+    }
+    #searchInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      padding: 15px 12px;
+      color: var(--text);
+      letter-spacing: 0.02em;
+      min-width: 0;
+    }
+    #searchInput::placeholder {
+      color: #b8a888;
+      font-family: var(--font);
+      font-size: 0.95rem;
+    }
+    .search-clear {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 8px 16px;
+      color: var(--text-secondary);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .search-clear.visible { opacity: 1; pointer-events: auto; }
+    .search-clear:hover { color: var(--text); background: var(--surface-hover); }
+    .hints {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 0 4px;
+    }
+    .hint-chip {
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .hint-chip:hover { border-color: var(--accent); color: var(--text); background: var(--surface-hover); }
+    .syntax-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: var(--accent);
+      cursor: pointer;
+      user-select: none;
+      background: none;
+      border: none;
+      font-family: var(--font);
+      font-weight: 500;
+      padding: 5px 0;
+    }
+    .syntax-panel {
+      max-width: 720px;
+      margin: 0 auto 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      display: none;
+      box-shadow: var(--shadow-sm);
+    }
+    .syntax-panel.open { display: block; }
+    .syntax-panel code {
+      font-family: var(--font-mono);
+      background: var(--accent-glow);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+    .stats {
+      width: 100%;
+      max-width: 720px;
+      padding: 0 20px;
+      margin-bottom: 6px;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+    }
+    .stats .count { font-weight: 600; color: var(--text); }
+    .results-container {
+      width: 100%;
+      max-width: 800px;
+      padding: 0 16px 60px;
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 10px;
+    }
+    @media (max-width: 500px) {
+      .results-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+    }
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+    .result-card:hover {
+      border-color: var(--accent);
+      background: var(--surface-hover);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    .result-card:active { transform: scale(0.97); }
+    .result-card .emoji-display {
+      font-size: 2.3rem;
+      line-height: 1;
+      flex-shrink: 0;
+      width: 46px;
+      text-align: center;
+    }
+    .result-card .name-display {
+      font-size: 0.8rem;
+      line-height: 1.4;
+      word-break: break-word;
+      flex: 1;
+      min-width: 0;
+    }
+    .result-card .name-display mark {
+      background: var(--accent-glow);
+      color: #7a4e0e;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-weight: 600;
+    }
+    @media (prefers-color-scheme: dark) {
+      .result-card .name-display mark { color: #f0c040; background: #3d2e10; }
+    }
+    .copy-toast {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 0.68rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      transform: translateY(-6px);
+      font-weight: 600;
+    }
+    .copy-toast.show { opacity: 1; transform: translateY(0); }
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-secondary);
+    }
+    .empty-state .big-emoji { font-size: 4rem; display: block; margin-bottom: 16px; opacity: 0.7; }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      opacity: 0.7;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+<header class="header">
+  <h1><span class="icon">🔎</span> Emoji Nutrimatic</h1>
+  <p class="subtitle">Full CLDR Short Name database · sourced from Emojipedia</p>
+  <span class="badge">All Emoji · Emojipedia CLDR Names</span>
+</header>
+
+<div class="search-container">
+  <div class="search-wrapper">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder='e.g. *face*  or  red_heart  or  "smiling"&"eyes"  or  <aeginrss>'
+           autocomplete="off" spellcheck="false">
+    <button class="search-clear" id="clearBtn" aria-label="Clear">✕</button>
+  </div>
+  <div class="hints">
+    <span class="hint-chip" data-pattern='"cat"&"face"'>"cat"&"face"</span>
+    <span class="hint-chip" data-pattern='C*V*C*'>C*V*C*</span>
+    <span class="hint-chip" data-pattern='*_###'>*_###</span>
+    <span class="hint-chip" data-pattern='<aacef>'>〈face〉</span>
+    <span class="hint-chip" data-pattern='"heart"&blue'>"heart"&blue</span>
+    <span class="hint-chip" data-pattern='A*V*A*'>A*V*A*</span>
+    <span class="hint-chip" data-pattern='*-*-*'>*-*-*</span>
+    <button class="syntax-toggle" id="syntaxToggle">📘 Syntax ▾</button>
+  </div>
+  <div class="syntax-panel" id="syntaxPanel">
+    <strong>Full Nutrimatic syntax</strong><br>
+    <code>a-z, 0-9, space</code> literal · <code>[] () {} | . ? * +</code> as regex<br>
+    <code>"expr"</code> whole word (no space inside) ·
+    <code>expr&amp;expr</code> both must match<br>
+    <code>&lt;letters&gt;</code> anagram (lowercase) · <code>&lt;(ab)(cd)&gt;</code> group shuffle<br>
+    <code>_</code> [a-z0-9] · <code>#</code> [0-9] · <code>-</code> optional space<br>
+    <code>A</code> [a-z] · <code>C</code> consonant (incl. y) · <code>V</code> vowel (a,e,i,o,u)
+  </div>
+</div>
+
+<div class="stats" id="stats"><span id="statsText">Start typing a Nutrimatic query</span></div>
+
+<div class="results-container">
+  <div class="results-grid" id="resultsGrid"></div>
+  <div class="empty-state" id="emptyState">
+    <span class="big-emoji">🎯</span>
+    <p>Enter a <strong>Nutrimatic‑style query</strong> above.<br>
+       Try <code>*face*</code>, <code>"heart"&red</code>, <code>&lt;acef&gt;</code> or <code>C*V*C*</code>.</p>
+  </div>
+</div>
+
+<footer class="footer">By JimmyReload</footer>
+
+<script>
+// ──────────────────────────────────────
+// FULL CLDR SHORT NAME DATABASE
+// (source: Emojipedia, Unicode CLDR)
+// Compact format: "emoji short name|emoji short name|..."
+// ──────────────────────────────────────
+const RAW_DATA = "😀 grinning face|😃 grinning face with big eyes|😄 grinning face with smiling eyes|😁 beaming face with smiling eyes|😆 grinning squinting face|😅 grinning face with sweat|🤣 rolling on the floor laughing|😂 face with tears of joy|🙂 slightly smiling face|🙃 upside-down face|😉 winking face|😊 smiling face with smiling eyes|😇 smiling face with halo|🥰 smiling face with hearts|😍 smiling face with heart-eyes|🤩 star-struck|😘 face blowing a kiss|😗 kissing face|😚 kissing face with closed eyes|😙 kissing face with smiling eyes|😋 face savoring food|😛 face with tongue|😜 winking face with tongue|🤪 zany face|😝 squinting face with tongue|🤑 money-mouth face|🤗 smiling face with open hands|🤭 face with hand over mouth|🤫 shushing face|🤔 thinking face|🤐 zipper-mouth face|🤨 face with raised eyebrow|😐 neutral face|😑 expressionless face|😶 face without mouth|😏 smirking face|😒 unamused face|🙄 face with rolling eyes|😬 grimacing face|🤥 lying face|😌 relieved face|😔 pensive face|😪 sleepy face|🤤 drooling face|😴 sleeping face|😷 face with medical mask|🤒 face with thermometer|🤕 face with head-bandage|🤢 nauseated face|🤮 face vomiting|🤧 sneezing face|🥵 hot face|🥶 cold face|🥴 woozy face|😵 face with crossed-out eyes|🤯 exploding head|🤠 cowboy hat face|🥳 partying face|😎 smiling face with sunglasses|🤓 nerd face|🧐 face with monocle|😕 confused face|😟 worried face|🙁 slightly frowning face|☹️ frowning face|😮 face with open mouth|😯 hushed face|😲 astonished face|😳 flushed face|🥺 pleading face|😦 frowning face with open mouth|😧 anguished face|😨 fearful face|😰 anxious face with sweat|😥 sad but relieved face|😢 crying face|😭 loudly crying face|😱 face screaming in fear|😖 confounded face|😣 persevering face|😞 disappointed face|😓 downcast face with sweat|😩 weary face|😫 tired face|😤 face with steam from nose|😡 enraged face|😠 angry face|🤬 face with symbols on mouth|😈 smiling face with horns|👿 angry face with horns|💀 skull|☠️ skull and crossbones|💩 pile of poo|🤡 clown face|👹 ogre|👺 goblin|👻 ghost|👽 alien|👾 alien monster|🤖 robot|💋 kiss mark|💌 love letter|💘 heart with arrow|💝 heart with ribbon|💖 sparkling heart|💗 growing heart|💓 beating heart|💞 revolving hearts|💕 two hearts|💟 heart decoration|❤️ red heart|🧡 orange heart|💛 yellow heart|💚 green heart|💙 blue heart|💜 purple heart|🖤 black heart|🤍 white heart|🤎 brown heart|💔 broken heart|❣️ heart exclamation|💯 hundred points|💢 anger symbol|💥 collision|💫 dizzy|💦 sweat droplets|💨 dashing away|🕳️ hole|💬 speech balloon|🗯️ right anger bubble|💭 thought balloon|💤 zzz|👍 thumbs up|👎 thumbs down|👏 clapping hands|🙌 raising hands|👐 open hands|🤲 palms up together|🤝 handshake|🙏 folded hands|✌️ victory hand|🤞 crossed fingers|🤟 love-you gesture|🤘 sign of the horns|👌 OK hand|👈 backhand index pointing left|👉 backhand index pointing right|👆 backhand index pointing up|👇 backhand index pointing down|☝️ index pointing up|✋ raised hand|🤚 raised back of hand|🖐️ hand with fingers splayed|🖖 vulcan salute|👋 waving hand|🤙 call me hand|💪 flexed biceps|🦾 mechanical arm|🖕 middle finger|✍️ writing hand|🤳 selfie|👁️ eye|👀 eyes|👅 tongue|👄 mouth|👶 baby|🧒 child|👦 boy|👧 girl|🧑 person|👨 man|👩 woman|🧓 older person|👴 old man|👵 old woman|🧠 brain|🫀 anatomical heart|🫁 lungs|👣 footprints|🐵 monkey face|🐒 monkey|🦍 gorilla|🦧 orangutan|🐶 dog face|🐕 dog|🦮 guide dog|🐩 poodle|🐺 wolf|🦊 fox|🦝 raccoon|🐱 cat face|🐈 cat|🦁 lion|🐯 tiger face|🐅 tiger|🐆 leopard|🐴 horse face|🐎 horse|🦄 unicorn|🦓 zebra|🦌 deer|🐮 cow face|🐂 ox|🐃 water buffalo|🐄 cow|🐷 pig face|🐖 pig|🐗 boar|🐽 pig nose|🐏 ram|🐑 ewe|🐐 goat|🐪 camel|🐫 two-hump camel|🦙 llama|🦒 giraffe|🐘 elephant|🦏 rhinoceros|🦛 hippopotamus|🐭 mouse face|🐁 mouse|🐀 rat|🐹 hamster|🐰 rabbit face|🐇 rabbit|🐿️ chipmunk|🦔 hedgehog|🦇 bat|🐻 bear|🐨 koala|🐼 panda|🦥 sloth|🦦 otter|🦨 skunk|🦘 kangaroo|🦡 badger|🐾 paw prints|🦃 turkey|🐔 chicken|🐓 rooster|🐣 hatching chick|🐤 baby chick|🐥 front-facing baby chick|🐦 bird|🐧 penguin|🕊️ dove|🦅 eagle|🦆 duck|🦢 swan|🦉 owl|🦩 flamingo|🦚 peacock|🦜 parrot|🐸 frog|🐊 crocodile|🐢 turtle|🦎 lizard|🐍 snake|🐲 dragon face|🐉 dragon|🦕 sauropod|🦖 T-Rex|🐳 spouting whale|🐋 whale|🐬 dolphin|🐟 fish|🐠 tropical fish|🐡 blowfish|🦈 shark|🐙 octopus|🐚 spiral shell|🐌 snail|🦋 butterfly|🐛 bug|🐜 ant|🐝 honeybee|🐞 lady beetle|🦗 cricket|🕷️ spider|🕸️ spider web|🦂 scorpion|🦟 mosquito|🦠 microbe|🌸 cherry blossom|🌹 rose|🥀 wilted flower|🌺 hibiscus|🌻 sunflower|🌼 blossom|🌷 tulip|💐 bouquet|🌵 cactus|🎄 Christmas tree|🌲 evergreen tree|🌳 deciduous tree|🌴 palm tree|🌱 seedling|🌿 herb|☘️ shamrock|🍀 four leaf clover|🍁 maple leaf|🍂 fallen leaf|🍃 leaf fluttering in wind|🍄 mushroom|🌰 chestnut|🍇 grapes|🍈 melon|🍉 watermelon|🍊 tangerine|🍋 lemon|🍌 banana|🍍 pineapple|🥭 mango|🍎 red apple|🍏 green apple|🍐 pear|🍑 peach|🍒 cherries|🍓 strawberry|🥝 kiwi fruit|🍅 tomato|🥥 coconut|🥑 avocado|🍆 eggplant|🥔 potato|🥕 carrot|🌽 ear of corn|🌶️ hot pepper|🥒 cucumber|🥬 leafy green|🥦 broccoli|🧄 garlic|🧅 onion|🥜 peanuts|🍞 bread|🥐 croissant|🥖 baguette bread|🥨 pretzel|🥯 bagel|🥞 pancakes|🧇 waffle|🧀 cheese wedge|🍖 meat on bone|🍗 poultry leg|🥩 cut of meat|🥓 bacon|🍔 hamburger|🍟 french fries|🍕 pizza|🌭 hot dog|🥪 sandwich|🌮 taco|🌯 burrito|🥙 stuffed flatbread|🧆 falafel|🥚 egg|🍳 cooking|🥘 shallow pan of food|🍲 pot of food|🥣 bowl with spoon|🥗 green salad|🍿 popcorn|🧈 butter|🧂 salt|🥫 canned food|🍱 bento box|🍘 rice cracker|🍙 rice ball|🍚 cooked rice|🍛 curry rice|🍜 steaming bowl|🍝 spaghetti|🍠 roasted sweet potato|🍣 sushi|🍤 fried shrimp|🥮 moon cake|🍡 dango|🥟 dumpling|🥠 fortune cookie|🥡 takeout box|🦀 crab|🦞 lobster|🦐 shrimp|🦑 squid|🦪 oyster|🍦 soft ice cream|🍧 shaved ice|🍨 ice cream|🍩 doughnut|🍪 cookie|🎂 birthday cake|🍰 shortcake|🧁 cupcake|🥧 pie|🍫 chocolate bar|🍬 candy|🍭 lollipop|🍮 custard|🍯 honey pot|🍼 baby bottle|🥛 glass of milk|☕ hot beverage|🍵 teacup without handle|🍶 sake|🍾 bottle with popping cork|🍷 wine glass|🍸 cocktail glass|🍹 tropical drink|🍺 beer mug|🍻 clinking beer mugs|🥂 clinking glasses|🥃 tumbler glass|🥤 cup with straw|🧃 beverage box|🧉 mate|🧊 ice|🌍 globe showing Europe-Africa|🌎 globe showing Americas|🌏 globe showing Asia-Australia|🌋 volcano|🏔️ snow-capped mountain|⛰️ mountain|🏕️ camping|🏖️ beach with umbrella|🏜️ desert|🏝️ desert island|🏞️ national park|🏟️ stadium|🏛️ classical building|🏗️ building construction|🏠 house|🏡 house with garden|🏢 office building|🏣 Japanese post office|🏥 hospital|🏦 bank|🏨 hotel|🏩 love hotel|🏪 convenience store|🏫 school|🚗 car|🚕 taxi|🚙 sport utility vehicle|🚌 bus|🚎 trolleybus|🏎️ racing car|🚓 police car|🚑 ambulance|🚒 fire engine|🚐 minibus|🚚 delivery truck|🚛 articulated lorry|🚜 tractor|🛴 kick scooter|🚲 bicycle|🛵 motor scooter|🏍️ motorcycle|✈️ airplane|🛩️ small airplane|🚁 helicopter|🚀 rocket|🛸 flying saucer|⛵ sailboat|🚤 speedboat|🛳️ passenger ship|⛴️ ferry|🚢 ship|⚓ anchor|⚽ soccer ball|🏀 basketball|🏈 american football|⚾ baseball|🥎 softball|🎾 tennis|🏐 volleyball|🏉 rugby football|🥏 flying disc|🎱 pool 8 ball|🏓 ping pong|🏸 badminton|🥊 boxing glove|🥋 martial arts uniform|⛳ flag in hole|🎣 fishing pole|🤿 diving mask|🎽 running shirt|🎿 skis|🛷 sled|🥌 curling stone|🎯 bullseye|🎮 video game|🎰 slot machine|🎲 game die|🧩 puzzle piece|🎸 guitar|🎹 musical keyboard|🥁 drum|🎷 saxophone|🎺 trumpet|🎻 violin|🎬 clapper board|🎤 microphone|🎧 headphone|📱 mobile phone|💻 laptop|🖥️ desktop computer|⌨️ keyboard|🖱️ computer mouse|🖨️ printer|📷 camera|🎥 movie camera|🔋 battery|🔌 electric plug|💡 light bulb|🔦 flashlight|🕯️ candle|📖 open book|📚 books|📝 memo|✏️ pencil|🖊️ pen|🔒 locked|🔓 unlocked|🔑 key|🔨 hammer|🪓 axe|⛏️ pick|🔧 wrench|🪛 screwdriver|🔩 nut and bolt|⚙️ gear|🗜️ clamp|⚖️ balance scale|🪜 ladder|🔗 link|⛓️ chains|🪝 hook|🧰 toolbox|🧲 magnet|💊 pill|💉 syringe|🩹 adhesive bandage|🩺 stethoscope|🚪 door|🛏️ bed|🛋️ couch and lamp|🚿 shower|🛁 bathtub|🚽 toilet|🧻 roll of paper|🧴 lotion bottle|🧷 safety pin|🧹 broom|🧺 basket|⭐ star|🌟 glowing star|✨ sparkles|🔥 fire|💧 droplet|🌊 water wave|🎵 musical note|🎶 musical notes|🔔 bell|🔕 bell with slash|📢 loudspeaker|📣 megaphone|🔍 magnifying glass tilted left|🔎 magnifying glass tilted right|⚠️ warning|🚫 prohibited|✅ check mark button|❌ cross mark|❓ red question mark|❗ red exclamation mark|➕ plus|➖ minus|➗ divide|✖️ multiply|♾️ infinity|💰 money bag|💵 dollar banknote|💴 yen banknote|💶 euro banknote|💷 pound banknote|🪙 coin|♻️ recycling symbol|🔱 trident emblem|📛 name badge|🔰 Japanese symbol for beginner|⭕ hollow red circle|☑️ check box with check|🔘 radio button|🔴 red circle|🟠 orange circle|🟡 yellow circle|🟢 green circle|🔵 blue circle|🟣 purple circle|🟤 brown circle|⚫ black circle|⚪ white circle|🟥 red square|🟧 orange square|🟨 yellow square|🟩 green square|🟦 blue square|🟪 purple square|🟫 brown square|☀️ sun|🌞 sun with face|🌝 full moon face|🌛 first quarter moon face|🌜 last quarter moon face|🌚 new moon face|🌕 full moon|🌖 waning gibbous moon|🌗 last quarter moon|🌘 waning crescent moon|🌑 new moon|🌒 waxing crescent moon|🌓 first quarter moon|🌔 waxing gibbous moon|🌙 crescent moon|🌈 rainbow|☁️ cloud|⛅ sun behind cloud|🌩️ cloud with lightning|🌪️ tornado|🌫️ fog|🌬️ wind face|❄️ snowflake|☃️ snowman|⛄ snowman without snow|🌨️ cloud with snow|🌧️ cloud with rain|🌦️ sun behind rain cloud|🌥️ sun behind large cloud|🌤️ sun behind small cloud|⚡ high voltage|🩸 drop of blood|🩹 adhesive bandage|🩺 stethoscope|🧑‍⚕️ health worker|🧑‍🎓 student|🧑‍🏫 teacher|🧑‍🍳 cook|🧑‍🔧 mechanic|🧑‍🏭 factory worker|🧑‍💼 office worker|🧑‍🔬 scientist|🧑‍💻 technologist|🧑‍🎤 singer|🧑‍🎨 artist|🧑‍✈️ pilot|🧑‍🚀 astronaut|🧑‍🚒 firefighter|🧑‍🦯 person with white cane|🧑‍🦼 person in motorized wheelchair|🧑‍🦽 person in manual wheelchair|🧑‍🦰 person: red hair|🧑‍🦱 person: curly hair|🧑‍🦳 person: white hair|🧑‍🦲 person: bald|🧑‍🤝‍🧑 people holding hands|👨‍⚕️ man health worker|👨‍🎓 man student|👨‍🏫 man teacher|👨‍🍳 man cook|👨‍🔧 man mechanic|👨‍🏭 man factory worker|👨‍💼 man office worker|👨‍🔬 man scientist|👨‍💻 man technologist|👨‍🎤 man singer|👨‍🎨 man artist|👨‍✈️ man pilot|👨‍🚀 man astronaut|👨‍🚒 man firefighter|👩‍⚕️ woman health worker|👩‍🎓 woman student|👩‍🏫 woman teacher|👩‍🍳 woman cook|👩‍🔧 woman mechanic|👩‍🏭 woman factory worker|👩‍💼 woman office worker|👩‍🔬 woman scientist|👩‍💻 woman technologist|👩‍🎤 woman singer|👩‍🎨 woman artist|👩‍✈️ woman pilot|👩‍🚀 woman astronaut|👩‍🚒 woman firefighter|🫃 pregnant man|🫄 pregnant person|🤱 breast-feeding|👼 baby angel|🎅 Santa Claus|🤶 Mrs. Claus|🧑‍🎄 mx claus|🦸 superhero|🦹 supervillain|🧙 mage|🧚 fairy|🧛 vampire|🧜 merperson|🧝 elf|🧞 genie|🧟 zombie|🧌 troll|💆 person getting massage|💇 person getting haircut|🚶 person walking|🧍 person standing|🧎 person kneeling|🧑‍🦯 person with white cane|🧑‍🦼 person in motorized wheelchair|🧑‍🦽 person in manual wheelchair|🏃 person running|💃 woman dancing|🕺 man dancing|👯 people with bunny ears|🧖 person in steamy room|🧗 person climbing|🤸 person cartwheeling|⛹️ person bouncing ball|🏋️ person lifting weights|🚴 person biking|🚵 person mountain biking|🤼 people wrestling|🤽 person playing water polo|🤾 person playing handball|🤹 person juggling|🧘 person in lotus position|🛀 person taking bath|🛌 person in bed|🧑‍🤝‍🧑 people holding hands|👭 women holding hands|👬 men holding hands|👫 woman and man holding hands|💏 kiss|👩‍❤️‍💋‍👨 kiss: woman, man|👨‍❤️‍💋‍👨 kiss: man, man|👩‍❤️‍💋‍👩 kiss: woman, woman|💑 couple with heart|👩‍❤️‍👨 couple with heart: woman, man|👨‍❤️‍👨 couple with heart: man, man|👩‍❤️‍👩 couple with heart: woman, woman|👪 family|👨‍👩‍👦 family: man, woman, boy|👨‍👩‍👧 family: man, woman, girl|👨‍👩‍👧‍👦 family: man, woman, girl, boy|👨‍👩‍👦‍👦 family: man, woman, boy, boy|👨‍👩‍👧‍👧 family: man, woman, girl, girl|👨‍👨‍👦 family: man, man, boy|👨‍👨‍👧 family: man, man, girl|👨‍👨‍👧‍👦 family: man, man, girl, boy|👨‍👨‍👦‍👦 family: man, man, boy, boy|👨‍👨‍👧‍👧 family: man, man, girl, girl|👩‍👩‍👦 family: woman, woman, boy|👩‍👩‍👧 family: woman, woman, girl|👩‍👩‍👧‍👦 family: woman, woman, girl, boy|👩‍👩‍👦‍👦 family: woman, woman, boy, boy|👩‍👩‍👧‍👧 family: woman, woman, girl, girl|👨‍👦 family: man, boy|👨‍👦‍👦 family: man, boy, boy|👨‍👧 family: man, girl|👨‍👧‍👦 family: man, girl, boy|👨‍👧‍👧 family: man, girl, girl|👩‍👦 family: woman, boy|👩‍👦‍👦 family: woman, boy, boy|👩‍👧 family: woman, girl|👩‍👧‍👦 family: woman, girl, boy|👩‍👧‍👧 family: woman, girl, girl|🗣️ speaking head|👤 bust in silhouette|👥 busts in silhouette|🫂 people hugging|👣 footprints|🧳 luggage|🌂 closed umbrella|☂️ umbrella|☔ umbrella with rain drops|⛱️ umbrella on ground|⚡ high voltage|❄️ snowflake|☃️ snowman|⛄ snowman without snow|☄️ comet|🔥 fire|💧 droplet|🌊 water wave|🎃 jack-o-lantern|🎄 Christmas tree|🎆 fireworks|🎇 sparkler|🧨 firecracker|✨ sparkles|🎈 balloon|🎉 party popper|🎊 confetti ball|🎋 tanabata tree|🎍 pine decoration|🎎 Japanese dolls|🎏 carp streamer|🎐 wind chime|🎑 moon viewing ceremony|🧧 red envelope|🎀 ribbon|🎁 wrapped gift|🎗️ reminder ribbon|🎟️ admission tickets|🎫 ticket|🎖️ military medal|🏆 trophy|🏅 sports medal|🥇 1st place medal|🥈 2nd place medal|🥉 3rd place medal|⚽ soccer ball|⚾ baseball|🥎 softball|🏀 basketball|🏐 volleyball|🏈 american football|🏉 rugby football|🎾 tennis|🥏 flying disc|🎳 bowling|🏏 cricket|🏑 field hockey|🏒 ice hockey|🥍 lacrosse|🏓 ping pong|🏸 badminton|🥊 boxing glove|🥋 martial arts uniform|🥅 goal net|⛳ flag in hole|⛸️ ice skate|🎣 fishing pole|🤿 diving mask|🎽 running shirt|🎿 skis|🛷 sled|🥌 curling stone|🎯 bullseye|🪀 yo-yo|🪁 kite|🔫 water pistol|🎱 pool 8 ball|🔮 crystal ball|🪄 magic wand|🧿 nazar amulet|🎮 video game|🕹️ joystick|🎰 slot machine|🎲 game die|🧩 puzzle piece|🧸 teddy bear|🪅 piñata|🪆 nesting dolls|♠️ spade suit|♥️ heart suit|♦️ diamond suit|♣️ club suit|♟️ chess pawn|🃏 joker|🀄 mahjong red dragon|🎴 flower playing cards|🎭 performing arts|🖼️ framed picture|🎨 artist palette|🧵 thread|🪡 sewing needle|🧶 yarn|🪢 knot|👓 glasses|🕶️ sunglasses|🥽 goggles|🥼 lab coat|🦺 safety vest|👔 necktie|👕 t-shirt|👖 jeans|🧣 scarf|🧤 gloves|🧥 coat|🧦 socks|👗 dress|👘 kimono|🥻 sari|🩱 one-piece swimsuit|🩲 briefs|🩳 shorts|👙 bikini|👚 woman’s clothes|👛 purse|👜 handbag|👝 clutch bag|🛍️ shopping bags|🎒 backpack|🩴 thong sandal|👞 man’s shoe|👟 running shoe|🥾 hiking boot|🥿 flat shoe|👠 high-heeled shoe|👡 woman’s sandal|🩰 ballet shoes|👢 woman’s boot|👑 crown|👒 woman’s hat|🎩 top hat|🎓 graduation cap|🧢 billed cap|🪖 military helmet|⛑️ rescue worker’s helmet|📿 prayer beads|💄 lipstick|💍 ring|💎 gem stone|🔇 muted speaker|🔈 speaker low volume|🔉 speaker medium volume|🔊 speaker high volume|📢 loudspeaker|📣 megaphone|📯 postal horn|🔔 bell|🔕 bell with slash|🎼 musical score|🎵 musical note|🎶 musical notes|🎙️ studio microphone|🎚️ level slider|🎛️ control knobs|🎤 microphone|🎧 headphone|📻 radio|🎷 saxophone|🪗 accordion|🎸 guitar|🎹 musical keyboard|🎺 trumpet|🎻 violin|🪕 banjo|🥁 drum|🪘 long drum|📱 mobile phone|📲 mobile phone with arrow|☎️ telephone|📞 telephone receiver|📟 pager|📠 fax machine|🔋 battery|🔌 electric plug|💻 laptop|🖥️ desktop computer|🖨️ printer|⌨️ keyboard|🖱️ computer mouse|🖲️ trackball|💽 computer disk|💾 floppy disk|💿 optical disk|📀 dvd|🧮 abacus|🎥 movie camera|🎞️ film frames|📽️ film projector|🎬 clapper board|📺 television|📷 camera|📸 camera with flash|📹 video camera|📼 videocassette|🔍 magnifying glass tilted left|🔎 magnifying glass tilted right|🕯️ candle|💡 light bulb|🔦 flashlight|🏮 red paper lantern|🪔 diya lamp|📔 notebook with decorative cover|📕 closed book|📖 open book|📗 green book|📘 blue book|📙 orange book|📚 books|📓 notebook|📒 ledger|📃 page with curl|📜 scroll|📄 page facing up|📰 newspaper|🗞️ rolled-up newspaper|📑 bookmark tabs|🔖 bookmark|🏷️ label|💰 money bag|🪙 coin|💴 yen banknote|💵 dollar banknote|💶 euro banknote|💷 pound banknote|💸 money with wings|💳 credit card|🧾 receipt|✉️ envelope|📧 e-mail|📨 incoming envelope|📩 envelope with arrow|📤 outbox tray|📥 inbox tray|📦 package|📫 closed mailbox with raised flag|📪 closed mailbox with lowered flag|📬 open mailbox with raised flag|📭 open mailbox with lowered flag|📮 postbox|🗳️ ballot box with ballot|✏️ pencil|✒️ black nib|🖋️ fountain pen|🖊️ pen|🖌️ paintbrush|🖍️ crayon|📝 memo|✂️ scissors|🗒️ spiral notepad|🗓️ spiral calendar|📅 calendar|📆 tear-off calendar|📇 card index|🗃️ card file box|🗄️ file cabinet|🗑️ wastebasket|🔒 locked|🔓 unlocked|🔏 locked with pen|🔐 locked with key|🔑 key|🗝️ old key|🔨 hammer|🪓 axe|⛏️ pick|⚒️ hammer and pick|🛠️ hammer and wrench|🗡️ dagger|⚔️ crossed swords|💣 bomb|🪃 boomerang|🏹 bow and arrow|🛡️ shield|🪚 carpentry saw|🔧 wrench|🪛 screwdriver|🔩 nut and bolt|⚙️ gear|🗜️ clamp|⚖️ balance scale|🦯 white cane|🔗 link|⛓️ chains|🪝 hook|🧰 toolbox|🧲 magnet|🪜 ladder|⚗️ alembic|🧪 test tube|🧫 petri dish|🧬 dna|🔬 microscope|🔭 telescope|📡 satellite antenna|💉 syringe|🩸 drop of blood|💊 pill|🩹 adhesive bandage|🩺 stethoscope|🚪 door|🛗 elevator|🪞 mirror|🪟 window|🛏️ bed|🛋️ couch and lamp|🪑 chair|🚽 toilet|🪠 plunger|🚿 shower|🛁 bathtub|🪤 mouse trap|🪒 razor|🧴 lotion bottle|🧷 safety pin|🧹 broom|🧺 basket|🧻 roll of paper|🪣 bucket|🧼 soap|🪥 toothbrush|🧽 sponge|🧯 fire extinguisher|🛒 shopping cart|🚬 cigarette|⚰️ coffin|🪦 headstone|⚱️ funeral urn|🗿 moai|🪧 placard";
+
+// Parse compact data into array of objects
+const emojiData = RAW_DATA.split('|').map(entry => {
+  const firstSpace = entry.indexOf(' ');
+  if (firstSpace === -1) return { e: entry, n: '' };
+  return {
+    e: entry.substring(0, firstSpace),
+    n: entry.substring(firstSpace + 1)
+  };
+}).filter(item => item.n.length > 0);
+
+// ──────────────────────────────────────
+// NUTRIMATIC QUERY ENGINE
+// ──────────────────────────────────────
+function parseQuery(query) {
+  const parts = query.split('&').map(s => s.trim()).filter(s => s.length > 0);
+  if (parts.length === 0) return { matchers: [] };
+  const matchers = parts.map(part => {
+    if (part.startsWith('<') && part.endsWith('>')) {
+      return parseAnagram(part);
+    } else {
+      return parseNormal(part);
+    }
+  });
+  return { matchers };
+}
+
+function parseNormal(sub) {
+  const quotedRegexes = [];
+  let remaining = sub;
+  const quoteRegex = /"([^"]*)"/g;
+  let m;
+  while ((m = quoteRegex.exec(sub)) !== null) {
+    const inner = m[1];
+    const innerSource = convertPatternToRegexSource(inner);
+    quotedRegexes.push(new RegExp(innerSource, 'i'));
+    remaining = remaining.replace(m[0], '');
+  }
+  const mainSource = convertPatternToRegexSource(remaining);
+  let mainRegex = null;
+  try {
+    mainRegex = mainSource ? new RegExp(mainSource, 'i') : null;
+  } catch (e) {
+    mainRegex = null;
+  }
+  return { type: 'normal', mainRegex, quotedRegexes };
+}
+
+function convertPatternToRegexSource(pattern) {
+  let out = '';
+  let inCharClass = false;
+  for (let i = 0; i < pattern.length; i++) {
+    const ch = pattern[i];
+    if (ch === '[' && !inCharClass) { inCharClass = true; out += '['; continue; }
+    if (ch === ']' && inCharClass) { inCharClass = false; out += ']'; continue; }
+    if (inCharClass) { out += ch; continue; }
+    switch (ch) {
+      case '-': out += '( ?)'; break;
+      case '_': out += '[a-z0-9]'; break;
+      case '#': out += '[0-9]'; break;
+      case 'A': out += '[a-z]'; break;
+      case 'C': out += '[bcdfghjklmnpqrstvwxyz]'; break;
+      case 'V': out += '[aeiou]'; break;
+      case '.': case '?': case '*': case '+': case '|': case '(': case ')': case '{': case '}':
+      case '[': case ']': case '^': case '$': out += ch; break;
+      case '\\': out += '\\\\'; break;
+      default: out += ch;
+    }
+  }
+  return out;
+}
+
+function parseAnagram(sub) {
+  const inner = sub.slice(1, -1).trim();
+  if (!inner) return { type: 'anagram', checker: () => false };
+  const groups = [];
+  let rest = inner;
+  const groupRegex = /\(([^)]+)\)/g;
+  let lastIdx = 0;
+  let m;
+  while ((m = groupRegex.exec(inner)) !== null) {
+    if (m.index > lastIdx) {
+      const literal = inner.slice(lastIdx, m.index).replace(/[^a-z]/g, '');
+      if (literal) groups.push(literal);
+    }
+    const grp = m[1].replace(/[^a-z]/g, '');
+    if (grp) groups.push(grp);
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < inner.length) {
+    const literal = inner.slice(lastIdx).replace(/[^a-z]/g, '');
+    if (literal) groups.push(literal);
+  }
+  if (groups.length === 0) return { type: 'anagram', checker: () => false };
+
+  function permute(arr) {
+    if (arr.length <= 1) return [arr];
+    const result = [];
+    for (let i = 0; i < arr.length; i++) {
+      const current = arr[i];
+      const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+      for (const p of permute(remaining)) {
+        result.push([current, ...p]);
+      }
+    }
+    return result;
+  }
+  const allPerms = permute(groups).map(perm => perm.join(''));
+  const sortedPerms = allPerms.map(s => s.toLowerCase().split('').sort().join(''));
+
+  return {
+    type: 'anagram',
+    checker: (name) => {
+      const cleaned = name.replace(/[^a-z]/g, '').toLowerCase();
+      const sortedName = cleaned.split('').sort().join('');
+      return sortedPerms.includes(sortedName);
+    }
+  };
+}
+
+function matchesEmoji(name, matchers) {
+  for (const matcher of matchers) {
+    if (matcher.type === 'anagram') {
+      if (!matcher.checker(name)) return false;
+    } else if (matcher.type === 'normal') {
+      if (matcher.mainRegex && !matcher.mainRegex.test(name)) return false;
+      for (const qr of matcher.quotedRegexes) {
+        const words = name.split(' ');
+        if (!words.some(word => qr.test(word))) return false;
+      }
+    }
+  }
+  return true;
+}
+
+// ──────────────────────────────────────
+// UI LOGIC
+// ──────────────────────────────────────
+const searchInput = document.getElementById('searchInput');
+const clearBtn = document.getElementById('clearBtn');
+const resultsGrid = document.getElementById('resultsGrid');
+const emptyState = document.getElementById('emptyState');
+const statsText = document.getElementById('statsText');
+const syntaxToggle = document.getElementById('syntaxToggle');
+const syntaxPanel = document.getElementById('syntaxPanel');
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function highlightText(name, pattern) {
+  if (!pattern.trim()) return escapeHTML(name);
+  try {
+    const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('(' + escaped + ')', 'gi');
+    return escapeHTML(name).replace(regex, '<mark>$1</mark>');
+  } catch (e) {
+    return escapeHTML(name);
+  }
+}
+
+function performSearch() {
+  const query = searchInput.value.trim();
+  clearBtn.classList.toggle('visible', query.length > 0);
+  if (!query) {
+    resultsGrid.innerHTML = '';
+    emptyState.style.display = 'block';
+    statsText.textContent = 'Type a Nutrimatic query to search';
+    return;
+  }
+  let parsed;
+  try {
+    parsed = parseQuery(query);
+  } catch (e) {
+    resultsGrid.innerHTML = '';
+    emptyState.style.display = 'block';
+    statsText.innerHTML = '<span style="color:#d44">Query parse error</span>';
+    return;
+  }
+  if (parsed.matchers.length === 0) {
+    resultsGrid.innerHTML = '';
+    emptyState.style.display = 'block';
+    statsText.textContent = 'Empty query';
+    return;
+  }
+  const matches = emojiData.filter(item => matchesEmoji(item.n, parsed.matchers));
+  matches.sort((a,b) => a.n.localeCompare(b.n));
+  if (matches.length === 0) {
+    resultsGrid.innerHTML = '';
+    emptyState.style.display = 'block';
+    statsText.innerHTML = 'No results for <strong>' + escapeHTML(query) + '</strong>';
+  } else {
+    emptyState.style.display = 'none';
+    resultsGrid.innerHTML = matches.map(item => {
+      const highlighted = highlightText(item.n, query);
+      return `<div class="result-card" data-emoji="${escapeHTML(item.e)}" data-name="${escapeHTML(item.n)}" title="Click to copy emoji">
+                <span class="emoji-display">${item.e}</span>
+                <span class="name-display">${highlighted}</span>
+                <span class="copy-toast">Copied!</span>
+              </div>`;
+    }).join('');
+    bindCardClicks();
+    statsText.innerHTML = '<span class="count">' + matches.length + '</span> emoji matched';
+  }
+}
+
+function bindCardClicks() {
+  document.querySelectorAll('.result-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const emoji = this.dataset.emoji;
+      const toast = this.querySelector('.copy-toast');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(emoji).then(() => showToast(toast)).catch(() => fallbackCopy(emoji, toast));
+      } else {
+        fallbackCopy(emoji, toast);
+      }
+    });
+  });
+}
+function fallbackCopy(text, toast) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.left='-999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showToast(toast); } catch(e) {}
+  document.body.removeChild(ta);
+}
+function showToast(toast) {
+  if (!toast) return;
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 1200);
+}
+
+searchInput.addEventListener('input', performSearch);
+clearBtn.addEventListener('click', () => { searchInput.value = ''; searchInput.focus(); performSearch(); });
+document.querySelectorAll('.hint-chip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    searchInput.value = this.dataset.pattern;
+    searchInput.focus();
+    performSearch();
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.activeElement === searchInput) {
+    searchInput.value = ''; performSearch();
+  }
+  if ((e.key === 'k' && (e.ctrlKey || e.metaKey)) || (e.key === '/' && document.activeElement !== searchInput)) {
+    e.preventDefault(); searchInput.focus(); searchInput.select();
+  }
+});
+syntaxToggle.addEventListener('click', () => {
+  syntaxPanel.classList.toggle('open');
+  syntaxToggle.textContent = syntaxPanel.classList.contains('open') ? '📘 Syntax ▴' : '📘 Syntax ▾';
+});
+
+performSearch();
+setTimeout(() => { if (window.innerWidth > 768) searchInput.focus(); }, 300);
+
+console.log('✅ Emoji Nutrimatic ready — ' + emojiData.length + ' emoji from Emojipedia CLDR data.');
+</script>
+</body>
+</html>
