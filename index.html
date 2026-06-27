@@ -63,34 +63,16 @@
       flex-wrap: wrap;
     }
     .header .icon { font-size: 2.2rem; line-height:1; }
-    .header .subtitle {
-      margin-top: 4px;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-    .header .badge {
-      display: inline-block;
-      background: var(--accent-glow);
-      color: #7b5a14;
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 4px 14px;
-      border-radius: 20px;
-      margin-top: 8px;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-    .header .badge .count { font-weight: 700; }
 
     .search-container {
       width: 100%;
       max-width: 720px;
       padding: 8px 0 14px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: var(--bg);
+      position: relative;  /* 不再 sticky，正常滚动 */
+      background: transparent; /* 无背景色 */
+      margin-bottom: 4px;
     }
+
     .search-wrapper {
       display: flex;
       align-items: center;
@@ -143,33 +125,62 @@
     .search-clear.visible { opacity: 1; pointer-events: auto; }
     .search-clear:hover { color: var(--text); background: var(--surface-hover); }
 
-    .hints {
+    .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      align-items: center;
+      gap: 12px;
       margin-top: 10px;
       padding: 0 4px;
-      align-items: center;
     }
-    .hint-chip {
-      font-size: 0.78rem;
-      font-family: var(--font-mono);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 5px 14px;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: all 0.15s;
-      user-select: none;
-      white-space: nowrap;
-    }
-    .hint-chip:hover { border-color: var(--accent); color: var(--text); background: var(--surface-hover); }
-    .syntax-toggle {
-      display: inline-flex;
+    .toggle-switch {
+      display: flex;
       align-items: center;
       gap: 6px;
-      margin-left: auto;
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-switch .toggle-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: color 0.2s, font-weight 0.2s;
+    }
+    .toggle-switch .toggle-label.active {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .toggle-switch .toggle-track {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: #ccc;
+      border-radius: 12px;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .toggle-switch .toggle-track .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch input[type="checkbox"] {
+      display: none;
+    }
+    .toggle-switch input[type="checkbox"]:checked + .toggle-track {
+      background: var(--accent);
+    }
+    .toggle-switch input[type="checkbox"]:checked + .toggle-track .toggle-thumb {
+      transform: translateX(20px);
+    }
+
+    .syntax-toggle {
       font-size: 0.8rem;
       color: var(--accent);
       cursor: pointer;
@@ -179,6 +190,7 @@
       font-family: var(--font);
       font-weight: 500;
       padding: 5px 0;
+      margin-left: auto;
     }
     .syntax-panel {
       max-width: 720px;
@@ -324,23 +336,23 @@
 
 <header class="header">
   <h1><span class="icon">🔎</span> Emoji Nutrimatic</h1>
-  <span id="badgeCount" style="display:none"></span>
 </header>
 
-<div class="search-container">
+<div class="search-container" id="searchContainer">
   <div class="search-wrapper">
     <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder='e.g. *face*  or  red_heart  or  "smiling"&"eyes" 或 <aeginrss>' autocomplete="off" spellcheck="false">
+    <input type="text" id="searchInput" placeholder="按回车搜索" autocomplete="off" spellcheck="false">
     <button class="search-clear" id="clearBtn" aria-label="Clear">✕</button>
   </div>
-  <div class="hints">
-    <span class="hint-chip" data-pattern='"cat"&"face"'>"cat"&"face"</span>
-    <span class="hint-chip" data-pattern='C*V*C*'>C*V*C*</span>
-    <span class="hint-chip" data-pattern='*_###'>*_###</span>
-    <span class="hint-chip" data-pattern='<aacef>'>〈face〉</span>
-    <span class="hint-chip" data-pattern='"heart"&blue'>"heart"&blue</span>
-    <span class="hint-chip" data-pattern='A*V*A*'>A*V*A*</span>
-    <span class="hint-chip" data-pattern='*-*-*'>*-*-*</span>
+  <div class="controls">
+    <label class="toggle-switch" id="modeToggle">
+      <span class="toggle-label" id="labelLoose">宽松模式</span>
+      <input type="checkbox" id="strictModeCheckbox">
+      <span class="toggle-track">
+        <span class="toggle-thumb"></span>
+      </span>
+      <span class="toggle-label" id="labelStrict">严格模式</span>
+    </label>
     <button class="syntax-toggle" id="syntaxToggle">📘 Syntax ▾</button>
   </div>
   <div class="syntax-panel" id="syntaxPanel">
@@ -365,11 +377,9 @@
   </div>
 </div>
 
-<footer class="footer">Emoji 17.0 · CLDR 短名称 · Nutrimatic 语法引擎</footer>
+<footer class="footer">Emoji 17.0 · Nutrimatic 语法引擎 · 按回车搜索</footer>
 
-<!-- ============================================================ -->
-<!-- 数据粘贴区：将清洗后的数据（每行一个 Emoji 名称）粘贴到下方 -->
-<!-- ============================================================ -->
+<!-- ========== 数据区域：请将您的 Emoji 数据粘贴在此处 ========== -->
 <script id="embeddedData" type="text/plain">
 😀 grinning face
 😃 grinning face with big eyes
@@ -5583,30 +5593,27 @@
 </script>
 
 <script>
-// ──────────────────────────────────────────────────────────────
-// 1. 解析清洗后的数据格式（每行一个 Emoji 名称）
-// ──────────────────────────────────────────────────────────────
+// ============================================================
+// 解析与核心逻辑（严格/宽松均展开元字符，但严格精确匹配，宽松包含匹配；均区分大小写）
+// ============================================================
+
 function parseCleanData(text) {
   const lines = text.split(/\r?\n/);
   const entries = [];
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed) continue;
-    // 找到第一个空格位置，前面是 Emoji，后面是名称
+    if (!trimmed || trimmed.startsWith('<!--')) continue;
     const firstSpace = trimmed.indexOf(' ');
     if (firstSpace === -1) continue;
     const emoji = trimmed.substring(0, firstSpace);
     const name = trimmed.substring(firstSpace + 1).trim();
-    if (emoji && name) {
-      entries.push({ e: emoji, n: name });
-    }
+    if (emoji && name) entries.push({ e: emoji, n: name });
   }
   return entries;
 }
 
-// ──────────────────────────────────────────────────────────────
-// 2. Nutrimatic 查询引擎（已修复引号跨空格匹配问题）
-// ──────────────────────────────────────────────────────────────
+let strictMode = false;
+
 function parseQuery(query) {
   const parts = query.split('&').map(s => s.trim()).filter(s => s.length > 0);
   if (parts.length === 0) return { matchers: [] };
@@ -5627,21 +5634,21 @@ function parseNormal(sub) {
   let m;
   while ((m = quoteRegex.exec(sub)) !== null) {
     const inner = m[1];
-    const innerSource = convertPatternToRegexSource(inner);
-    quotedRegexes.push(new RegExp(innerSource, 'i'));
+    const innerSource = convertPatternToRegexSource(inner, false);
+    quotedRegexes.push(new RegExp(innerSource, ''));
     remaining = remaining.replace(m[0], '');
   }
-  const mainSource = convertPatternToRegexSource(remaining);
+  const mainSource = convertPatternToRegexSource(remaining, strictMode);
   let mainRegex = null;
   try {
-    mainRegex = mainSource ? new RegExp(mainSource, 'i') : null;
+    mainRegex = mainSource ? new RegExp(mainSource, '') : null;
   } catch (e) {
     mainRegex = null;
   }
   return { type: 'normal', mainRegex, quotedRegexes };
 }
 
-function convertPatternToRegexSource(pattern) {
+function convertPatternToRegexSource(pattern, strict) {
   let out = '';
   let inCharClass = false;
   for (let i = 0; i < pattern.length; i++) {
@@ -5662,10 +5669,14 @@ function convertPatternToRegexSource(pattern) {
       default: out += ch;
     }
   }
-  if (!pattern.includes('*') && !pattern.startsWith('-') && !pattern.endsWith('-')) {
-    out = '\\b' + out + '\\b';
+  if (strict) {
+    return '^' + out + '$';
+  } else {
+    if (!pattern.includes('*') && !pattern.startsWith('-') && !pattern.endsWith('-')) {
+      out = '\\b' + out + '\\b';
+    }
+    return out;
   }
-  return out;
 }
 
 function parseAnagram(sub) {
@@ -5677,15 +5688,15 @@ function parseAnagram(sub) {
   let m;
   while ((m = groupRegex.exec(inner)) !== null) {
     if (m.index > lastIdx) {
-      const literal = inner.slice(lastIdx, m.index).replace(/[^a-z]/g, '');
+      const literal = inner.slice(lastIdx, m.index).replace(/[^a-zA-Z]/g, '');
       if (literal) groups.push(literal);
     }
-    const grp = m[1].replace(/[^a-z]/g, '');
+    const grp = m[1].replace(/[^a-zA-Z]/g, '');
     if (grp) groups.push(grp);
     lastIdx = m.index + m[0].length;
   }
   if (lastIdx < inner.length) {
-    const literal = inner.slice(lastIdx).replace(/[^a-z]/g, '');
+    const literal = inner.slice(lastIdx).replace(/[^a-zA-Z]/g, '');
     if (literal) groups.push(literal);
   }
   if (groups.length === 0) return { type: 'anagram', checker: () => false };
@@ -5696,21 +5707,38 @@ function parseAnagram(sub) {
     for (let i = 0; i < arr.length; i++) {
       const current = arr[i];
       const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
-      for (const p of permute(remaining)) {
-        result.push([current, ...p]);
-      }
+      for (const p of permute(remaining)) result.push([current, ...p]);
     }
     return result;
   }
   const allPerms = permute(groups).map(perm => perm.join(''));
-  const sortedPerms = allPerms.map(s => s.toLowerCase().split('').sort().join(''));
+  const queryLetters = allPerms[0].split('').sort().join('');
 
   return {
     type: 'anagram',
     checker: (name) => {
-      const cleaned = name.replace(/[^a-z]/g, '').toLowerCase();
+      const cleaned = name.replace(/[^a-zA-Z]/g, '');
       const sortedName = cleaned.split('').sort().join('');
-      return sortedPerms.includes(sortedName);
+      if (strictMode) {
+        if (queryLetters.length !== cleaned.length) return false;
+        const qCounts = {};
+        for (const ch of queryLetters) qCounts[ch] = (qCounts[ch] || 0) + 1;
+        const nCounts = {};
+        for (const ch of cleaned) nCounts[ch] = (nCounts[ch] || 0) + 1;
+        for (const ch in qCounts) {
+          if ((nCounts[ch] || 0) !== qCounts[ch]) return false;
+        }
+        return true;
+      } else {
+        const qCounts = {};
+        for (const ch of queryLetters) qCounts[ch] = (qCounts[ch] || 0) + 1;
+        const nCounts = {};
+        for (const ch of cleaned) nCounts[ch] = (nCounts[ch] || 0) + 1;
+        for (const ch in qCounts) {
+          if ((nCounts[ch] || 0) < qCounts[ch]) return false;
+        }
+        return true;
+      }
     }
   };
 }
@@ -5721,7 +5749,6 @@ function matchesEmoji(name, matchers) {
       if (!matcher.checker(name)) return false;
     } else if (matcher.type === 'normal') {
       if (matcher.mainRegex && !matcher.mainRegex.test(name)) return false;
-      // 修复：引号内容在整个名称中匹配，而非单个单词
       for (const qr of matcher.quotedRegexes) {
         if (!qr.test(name)) return false;
       }
@@ -5730,32 +5757,36 @@ function matchesEmoji(name, matchers) {
   return true;
 }
 
-// ──────────────────────────────────────────────────────────────
-// 3. 数据加载 & UI
-// ──────────────────────────────────────────────────────────────
-let emojiDB = [];
+// ============================================================
+// DOM 操作与事件绑定
+// ============================================================
 
+let emojiDB = [];
 const searchInput = document.getElementById('searchInput');
 const clearBtn = document.getElementById('clearBtn');
 const resultsGrid = document.getElementById('resultsGrid');
 const emptyState = document.getElementById('emptyState');
 const emptyMsg = document.getElementById('emptyMsg');
 const statsText = document.getElementById('statsText');
-const badgeCount = document.getElementById('badgeCount');
 const syntaxToggle = document.getElementById('syntaxToggle');
 const syntaxPanel = document.getElementById('syntaxPanel');
+const modeCheckbox = document.getElementById('strictModeCheckbox');
+const labelLoose = document.getElementById('labelLoose');
+const labelStrict = document.getElementById('labelStrict');
 
-const FALLBACK = [
-  {e:'😀',n:'grinning face'}, {e:'😂',n:'face with tears of joy'},
-  {e:'❤️',n:'red heart'}, {e:'🔥',n:'fire'}, {e:'👍',n:'thumbs up'}
-];
+// 模式切换（不自动搜索）
+modeCheckbox.addEventListener('change', function() {
+  strictMode = this.checked;
+  labelLoose.classList.toggle('active', !strictMode);
+  labelStrict.classList.toggle('active', strictMode);
+});
 
+// 数据加载
 function setData(data) {
   emojiDB = data;
-  badgeCount.textContent = data.length;
   if (data.length > 0) {
     statsText.innerHTML = `<span class="ok">✅ 已加载 ${data.length} 个 Emoji</span>`;
-    emptyMsg.innerHTML = '输入 <strong>Nutrimatic 查询语法</strong> 开始搜索。';
+    emptyMsg.innerHTML = '输入 <strong>Nutrimatic 查询语法</strong> 后按 <kbd>Enter</kbd> 开始搜索。';
   } else {
     statsText.innerHTML = '<span class="err">❌ 数据为空</span>';
   }
@@ -5766,7 +5797,7 @@ function tryEmbeddedData() {
   const embedEl = document.getElementById('embeddedData');
   if (embedEl) {
     const raw = embedEl.textContent.trim();
-    if (raw && raw.length > 10 && !raw.includes('将 emoji_clean.txt')) {
+    if (raw && raw.length > 10) {
       const parsed = parseCleanData(raw);
       if (parsed.length > 0) {
         setData(parsed);
@@ -5779,16 +5810,17 @@ function tryEmbeddedData() {
 
 function init() {
   if (!tryEmbeddedData()) {
-    setData(FALLBACK);
-    statsText.innerHTML = '<span style="color:#e67e22;">⚠️ 请将清洗后的数据粘贴到 <code>#embeddedData</code> 标签内</span>';
-    emptyMsg.innerHTML = '将 <code>emoji_clean.txt</code> 的<strong>全部内容</strong>粘贴到页面源码中 <code>&lt;script id="embeddedData"&gt;</code> 标签内，然后刷新页面。';
+    const fallback = [{e:'😀',n:'grinning face'}, {e:'😂',n:'face with tears of joy'}];
+    setData(fallback);
+    statsText.innerHTML = '<span style="color:#e67e22;">⚠️ 请将数据粘贴到 <code>#embeddedData</code> 标签内</span>';
+    emptyMsg.innerHTML = '将清洗后的数据（每行一个 Emoji 名称）粘贴到页面源代码中 <code>&lt;script id="embeddedData"&gt;</code> 标签内，然后刷新页面。';
   }
+  labelLoose.classList.add('active');
+  labelStrict.classList.remove('active');
 }
 init();
 
-// ──────────────────────────────────────────────────────────────
-// 4. 搜索和渲染
-// ──────────────────────────────────────────────────────────────
+// 辅助函数
 function escapeHTML(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -5799,13 +5831,43 @@ function highlightText(name, pattern) {
   if (!pattern.trim()) return escapeHTML(name);
   try {
     const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp('(' + escaped + ')', 'gi');
+    const regex = new RegExp('(' + escaped + ')', 'g');
     return escapeHTML(name).replace(regex, '<mark>$1</mark>');
   } catch (e) {
     return escapeHTML(name);
   }
 }
 
+function bindCardClicks() {
+  document.querySelectorAll('.result-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const emoji = this.dataset.emoji;
+      const toast = this.querySelector('.copy-toast');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(emoji).then(() => showToast(toast)).catch(() => fallbackCopy(emoji, toast));
+      } else {
+        fallbackCopy(emoji, toast);
+      }
+    });
+  });
+}
+
+function fallbackCopy(text, toast) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.left='-999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showToast(toast); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function showToast(toast) {
+  if (!toast) return;
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 1200);
+}
+
+// ===== 核心搜索（按回车触发） =====
 function performSearch() {
   const query = searchInput.value.trim();
   clearBtn.classList.toggle('visible', query.length > 0);
@@ -5818,10 +5880,16 @@ function performSearch() {
   }
 
   if (!query) {
-    resultsGrid.innerHTML = '';
-    emptyState.style.display = 'block';
-    emptyMsg.innerHTML = '输入 <strong>Nutrimatic 查询语法</strong> 开始搜索。';
-    statsText.innerHTML = `<span class="count">${emojiDB.length}</span> 个 Emoji 已加载 · 开始搜索`;
+    resultsGrid.innerHTML = emojiDB.map(item => 
+      `<div class="result-card" data-emoji="${escapeHTML(item.e)}" data-name="${escapeHTML(item.n)}" title="点击复制 Emoji">
+        <span class="emoji-display">${item.e}</span>
+        <span class="name-display">${escapeHTML(item.n)}</span>
+        <span class="copy-toast">已复制</span>
+      </div>`
+    ).join('');
+    emptyState.style.display = 'none';
+    statsText.innerHTML = `<span class="count">${emojiDB.length}</span> 个 Emoji 已加载`;
+    bindCardClicks();
     return;
   }
 
@@ -5867,56 +5935,33 @@ function performSearch() {
   }
 }
 
-function bindCardClicks() {
-  document.querySelectorAll('.result-card').forEach(card => {
-    card.addEventListener('click', function() {
-      const emoji = this.dataset.emoji;
-      const toast = this.querySelector('.copy-toast');
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(emoji).then(() => showToast(toast)).catch(() => fallbackCopy(emoji, toast));
-      } else {
-        fallbackCopy(emoji, toast);
-      }
-    });
-  });
-}
-
-function fallbackCopy(text, toast) {
-  const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position='fixed'; ta.style.left='-999px';
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); showToast(toast); } catch(e) {}
-  document.body.removeChild(ta);
-}
-
-function showToast(toast) {
-  if (!toast) return;
-  toast.classList.add('show');
-  clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => toast.classList.remove('show'), 1200);
-}
-
-searchInput.addEventListener('input', performSearch);
-clearBtn.addEventListener('click', () => { searchInput.value = ''; searchInput.focus(); performSearch(); });
-
-document.querySelectorAll('.hint-chip').forEach(chip => {
-  chip.addEventListener('click', function() {
-    searchInput.value = this.dataset.pattern;
-    searchInput.focus();
+// ===== 事件绑定 =====
+searchInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
     performSearch();
-  });
+  }
 });
 
-document.addEventListener('keydown', e => {
+clearBtn.addEventListener('click', function() {
+  searchInput.value = '';
+  searchInput.focus();
+  performSearch();
+});
+
+document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && document.activeElement === searchInput) {
-    searchInput.value = ''; performSearch();
+    searchInput.value = '';
+    performSearch();
   }
   if ((e.key === 'k' && (e.ctrlKey || e.metaKey)) || (e.key === '/' && document.activeElement !== searchInput)) {
-    e.preventDefault(); searchInput.focus(); searchInput.select();
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
   }
 });
 
-syntaxToggle.addEventListener('click', () => {
+syntaxToggle.addEventListener('click', function() {
   syntaxPanel.classList.toggle('open');
   syntaxToggle.textContent = syntaxPanel.classList.contains('open') ? '📘 Syntax ▴' : '📘 Syntax ▾';
 });
