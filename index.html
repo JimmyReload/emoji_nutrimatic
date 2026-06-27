@@ -398,7 +398,7 @@ function parseNormal(sub) {
   const mainSource = convertPatternToRegexSource(remaining);
   let mainRegex = null;
   try {
-    mainRegex = mainSource ? new RegExp(mainSource, 'i') : null;
+    mainRegex = mainSource ? new RegExp('^' + mainSource + '$', 'i') : null;
   } catch (e) {
     mainRegex = null;
   }
